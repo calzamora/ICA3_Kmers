@@ -1,0 +1,175 @@
+---
+title: "ICA 3 KMers"
+author: "Your name here"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# K-mer-based Understanding of Genomes and Transcriptomes 
+
+## Description 
+
+The objectives are to 1) plot k-mer distributions from WGS data to 
+understand genome properties, and 2) perform k-mer-based filtering and normalization 
+of RNA-Seq data in preparation for de novo transcriptome assembly.
+
+The WGS data for this assignment are from two pipefish species.
+
+The transcriptome of interest is the male brood pouch transcriptome of the Gulf pipefish, 
+*Syngnathus scovelli* and *Corythoichthys haematopterus*. The RNA-seq data are paired-end, 
+100 nt reads sequenced from Illumina TruSeq libraries. We will k-mer filter and normalize this 
+RNA-Seq data. 
+
+# K-mer spectra for WGS data 
+
+## Question 1: Use the jellyfish tool (4 points)
+
+Copy or link these files to a working directory on Talapas:
+
+```{r, echo = T, eval = F}
+/projects/bgmp/shared/Bi623/Assignment_Transcriptome_Kmers/ssc_wgs.fastq
+/projects/bgmp/shared/Bi623/Assignment_Transcriptome_Kmers/cha_wgs.fastq
+```
+
+Using jellyfish (a k-mer counting tool), enumerate k-mers in the two data sets 
+and format them for k-mer spectrum plotting. Create a new conda environment and 
+install `kmer-jellyfish`. Check out the jellyfish documentation, but you can run it 
+like this:
+
+```{r, echo = T, eval = F}
+jellyfish count -t 8 -C -m 19 -s 5G -o 19mer_out_ssc ssc_wgs.fastq
+jellyfish histo -o 19mer_out_ssc.histo outfile_from_jfish_count
+```
+
+Write the code you used down here: 
+
+```{r, echo = T, eval = F}
+
+$srun -A bgmp -p bgmp --mem=100GB -c 8 --pty bash
+$conda create kmer_ICA3
+$conda activate kmer_ICA3
+$jellyfish count -t 8 -C -m 19 -s 5G -o 19mer_out_cha /projects/bgmp/shared/Bi623/Assignment_Transcriptome_Kmers/ssc_wgs.fastq
+$jellyfish count -t 8 -C -m 19 -s 5G -o 19mer_out_cha /projects/bgmp/shared/Bi623/Assignment_Transcriptome_Kmers/cha_wgs.fastq
+$jellyfish histo -o 19mer_out_ssc.histo 19mer_out_ssc
+$jellyfish histo -o 19mer_out_cha.histo 19mer_out_cha
+
+```
+
+## Question 2: Plot the K-mer distribution (10 points)
+
+Read your ssc and cha .histo files into R and make a line plot of the spectrum 
+for the first 200 rows in each case. **Make your plots using the tidyverse and ggplot.**
+If you don’t understand what jellyfish histo is outputting, google it 
+(and think logically about k-mer spectra when run on Illumina sequencing data)!
+Plot the log of the counts. See David's example plot on slack and recreate it. 
+
+```{r}
+ssc <- read.table("/projects/bgmp/calz/bioinfo/Bi623/ICA3_KMers/19mer_out_ssc.histo")
+cha <- read.table("/projects/bgmp/calz/bioinfo/Bi623/ICA3_KMers/19mer_out_cha.histo")
+
+
+
+```
+
+## Question 3: What can you infer about these two genomes based on the k-mer spectra? (6 points) 
+
+<< Enter Answer Here >> 
+
+Calculate each genome size. **Hint:** Try first to estimate where the over-represented
+k-mers drop off by plotting the distribution of the first 20 unique k-mers. 
+Then, determine the most frequent k-mer size after that initial dip in representation.
+That will be your $\lambda$, and your $N$ should be calculatedd after this dip as 
+well. 
+
+```{r}
+
+
+```
+
+
+# K-mer filtering and normalization
+
+## Question 4: Filter data (4 points)
+
+You will use the `kmer_filter` program, which is part of the Stacks package, to 
+k-mer filter and normalize paired-end RNA-Seq reads. Create another new conda 
+environment and install stacks on Talapas. For details on flags and parameters, see:
+http://catchenlab.life.illinois.edu/stacks/comp/kmer_filter.php Note that this set
+includes fewer than 60 million read pairs. This is adequate coverage for many 
+transcriptome assembly projects, but the requirements will vary depending on 
+the study objectives, organism, tissue, etc.
+
+Copy or link these files to a working directory on Talapas:
+
+```{r, echo = T, eval = F}
+/projects/bgmp/shared/Bi623/Assignment_Transcriptome_Kmers/SscoPEclean_R1.fastq
+/projects/bgmp/shared/Bi623/Assignment_Transcriptome_Kmers/SscoPEclean_R2.fastq
+```
+
+Filter the data for rare k-mers using kmer_filter, also part of the Stacks package. 
+Perform rare k-mer filtering ONLY, and rename the new files SscoPEcleanfil_R1.fastq 
+and SscoPEcleanfil_R2.fastq.
+
+Use the defaults for k-mer size and `--min_lim`. Explain in a sentence or two what 
+this is doing to your data: 
+
+<< Enter Answer Here >> 
+
+Donʼt worry about carrying "orphaned" reads to the next step. Also, keep the 
+output files uncompressed. `kmer_filter` is single-threaded (only runs on one core), 
+but requires a large amount of RAM. Determine the max amount of RAM you can use on
+a node, and ask for that amount. What is the max amount of memory you can ask per node?
+
+<< Enter Answer Here >> 
+
+## Question 5: Utilize and explain different filters (10 points)
+
+Similarly, normalize the cleaned, filtered data to 20X k-mer coverage, compress 
+the output files, and rename the new files SscoPEcleanfil20x_R1.fastq. Use the default k-mer size of 15. Again, donʼt worry 
+about carrying "orphaned" reads to the next step.
+
+Briefly explain in a sentence or two what this is doing to your data, 
+and what orphaned reads are.
+
+<< Enter Answer Here >> 
+
+At this point you should have four sets of processed paired-end reads:
+
+1. a set that has been cleaned
+
+2. a set that has be cleaned and k-mer filtered
+
+3. a set that has been cleaned, k-mer filtered, and normalized to 20X
+Count and report the number of total read pairs for each set.
+
+```{r}
+#use Bash for this step 
+
+
+```
+
+## 6. Count k-mers (10 points)
+
+Now generate k-mer counts and histogram files using jellyfish (as above) three times 
+- 1) on SscoPEclean_R1.fastq, 2) on SscoPEcleanfil_R1.fastq, and 3) on SscoPEcleanfil20x_R1.fastq 
+
+Plot the spectra in R and include the figures with the rest of the assignment. 
+
+```{r}
+
+
+```
+
+How do the three RNA-Seq data spectra differ? 
+
+<< Enter Answer Here >> 
+
+How are they different from the WGS data spectra?
+
+<< Enter Answer Here >> 
+
+**Submit all bash and R code chunks, written answers to the questions, and R plots as a single RMarkdown file. Also render this file as an html or pdf file using knitr and submit it as well. Make sure your html or pdf file renders properly before submitting! (6 points)**
+
